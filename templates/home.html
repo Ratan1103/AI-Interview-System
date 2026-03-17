@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+{% block title %}InterviewAI — AI-Powered Mock Interviews{% endblock %}
+
+{% block content %}
+
+<!-- HERO -->
+<div class="hero">
+    <div class="badge">
+        <div class="badge-dot"></div>
+        AI-Powered · Voice-First · Adaptive
+    </div>
+
+    <h1>
+        Ace every <span>technical</span><br>
+        interview with <em>AI</em>
+    </h1>
+
+    <p>
+        Upload your resume, speak your answers, and get real-time expert feedback.
+        Our AI adapts to your level and helps you grow with every session.
+    </p>
+
+    <div class="cta-row">
+        <a href="{% url 'register' %}" class="btn-primary">Start Your First Interview →</a>
+        <a href="{% url 'login' %}" class="btn-ghost">Sign In</a>
+    </div>
+
+    <div class="stats">
+        <div class="stat">
+            <div class="stat-num">94%</div>
+            <div class="stat-label">OFFER RATE</div>
+        </div>
+        <div class="stat">
+            <div class="stat-num">12K+</div>
+            <div class="stat-label">INTERVIEWS DONE</div>
+        </div>
+        <div class="stat">
+            <div class="stat-num">200+</div>
+            <div class="stat-label">TOPICS COVERED</div>
+        </div>
+    </div>
+</div>
+
+<!-- FEATURES -->
+<div class="features">
+    <div class="section-title">Why InterviewAI</div>
+    <div class="features-heading">Everything you need to land the role</div>
+
+    <div class="features-grid">
+
+        <div class="feat-card">
+            <div class="feat-icon">🧠</div>
+            <h3>Adaptive AI</h3>
+            <p style="color:var(--muted);margin-top:8px;font-size:14px;line-height:1.6;">
+                Adjusts difficulty and topic based on how you answer. Weak on a concept? It digs deeper. Strong? It moves on.
+            </p>
+        </div>
+
+        <div class="feat-card">
+            <div class="feat-icon">🎙️</div>
+            <h3>Voice First</h3>
+            <p style="color:var(--muted);margin-top:8px;font-size:14px;line-height:1.6;">
+                Answer naturally by speaking. Real-time transcription via the Web Speech API — no extra tools needed.
+            </p>
+        </div>
+
+        <div class="feat-card">
+            <div class="feat-icon">📄</div>
+            <h3>Resume Based</h3>
+            <p style="color:var(--muted);margin-top:8px;font-size:14px;line-height:1.6;">
+                Upload your PDF and the AI tailors every question to your actual skills, projects, and experience.
+            </p>
+        </div>
+
+    </div>
+</div>
+
+<!-- FLOW -->
+<div class="flow-section">
+    <div class="section-title">The Interview Loop</div>
+    <div class="features-heading">How each session works</div>
+
+    <div class="flow-steps">
+        <div class="flow-step">
+            <div class="step-num active">01</div>
+            <h4>Upload Resume</h4>
+            <p style="color:var(--muted);font-size:13px;margin-top:6px;">AI learns your context</p>
+        </div>
+        <div class="flow-step">
+            <div class="step-num">02</div>
+            <h4>Configure</h4>
+            <p style="color:var(--muted);font-size:13px;margin-top:6px;">Set level &amp; topic</p>
+        </div>
+        <div class="flow-step">
+            <div class="step-num">03</div>
+            <h4>AI Questions</h4>
+            <p style="color:var(--muted);font-size:13px;margin-top:6px;">One smart question</p>
+        </div>
+        <div class="flow-step">
+            <div class="step-num">04</div>
+            <h4>Voice Answer</h4>
+            <p style="color:var(--muted);font-size:13px;margin-top:6px;">Speak naturally</p>
+        </div>
+        <div class="flow-step">
+            <div class="step-num">05</div>
+            <h4>Get Feedback</h4>
+            <p style="color:var(--muted);font-size:13px;margin-top:6px;">Improve instantly</p>
+        </div>
+    </div>
+</div>
+
+<!-- CTA FOOTER -->
+<div class="home-cta-footer">
+    <div class="home-cta-heading">Ready to get hired?</div>
+    <p style="color:var(--muted);margin-bottom:24px;">
+        Join thousands of engineers improving with AI
+    </p>
+    <a href="{% url 'register' %}" class="btn-primary">Start Free →</a>
+</div>
+
+{% endblock %}

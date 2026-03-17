@@ -1,0 +1,235 @@
+{% extends "base.html" %}
+{% block title %}Interview — InterviewAI{% endblock %}
+
+{% block content %}
+<div class="iv-wrap">
+
+    <!-- ── Session header bar ───────────────────────────────────── -->
+    <div class="iv-topbar">
+        <div class="iv-meta">
+            <span class="iv-live-dot"></span>
+            <span class="iv-label">LIVE SESSION</span>
+            <span class="iv-sep">·</span>
+            <span class="iv-label">{{ config.difficulty|upper }}</span>
+            <span class="iv-sep">·</span>
+            <span class="iv-label">{{ config.experience|upper }}</span>
+            {% if config.topic %}
+            <span class="iv-sep">·</span>
+            <span class="iv-label">{{ config.topic|upper }}</span>
+            {% endif %}
+        </div>
+
+        <div class="iv-actions">
+            <span class="iv-qcount">Q{{ question_number }}</span>
+            <a href="{% url 'end_interview' %}" class="iv-end-btn"
+               onclick="return confirm('End interview and see summary?')">
+                End Session
+            </a>
+        </div>
+    </div>
+
+    <!-- ── Error banner (empty answer etc.) ────────────────────── -->
+    {% if error %}
+    <div class="iv-error-banner">⚠ {{ error }}</div>
+    {% endif %}
+
+    <!-- ── Previous Q&A recap (shown after submitting an answer) ── -->
+    {% if feedback %}
+    <div class="iv-prev-recap">
+        <div class="iv-recap-label">YOUR ANSWER TO Q{{ question_number|add:"-1" }}</div>
+        <div class="iv-recap-q">{{ prev_question }}</div>
+        <div class="iv-recap-a">{{ prev_answer }}</div>
+    </div>
+    {% endif %}
+
+    <!-- ── Feedback section ─────────────────────────────────────── -->
+    {% if feedback %}
+    <div class="fb-wrap">
+
+        <div class="fb-encourage">
+            <span class="fb-enc-icon">✦</span>
+            {{ feedback.encouragement }}
+        </div>
+
+        <div class="fb-grid">
+
+            <div class="fb-card fb-card-green">
+                <div class="fb-card-title">✓ CORRECTNESS</div>
+                <p>{{ feedback.correctness }}</p>
+            </div>
+
+            <div class="fb-card fb-card-red">
+                <div class="fb-card-title">△ MISSING POINTS</div>
+                <p>{{ feedback.missing_points }}</p>
+            </div>
+
+            <div class="fb-card fb-card-blue">
+                <div class="fb-card-title">💡 IMPROVEMENTS</div>
+                <p>{{ feedback.improvements }}</p>
+            </div>
+
+            <div class="fb-card fb-card-purple">
+                <div class="fb-card-title">🧠 SAMPLE ANSWER</div>
+                <p>{{ feedback.sample_answer }}</p>
+            </div>
+
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- ── Next / Current question ──────────────────────────────── -->
+    <div class="iv-question-block">
+
+        <div class="iv-qtag">
+            {% if feedback %}NEXT QUESTION — Q{{ question_number }}{% else %}QUESTION — Q{{ question_number }}{% endif %}
+        </div>
+
+        <div class="iv-qtext" id="questionText">{{ question }}</div>
+
+    </div>
+
+    <!-- ── Answer form ──────────────────────────────────────────── -->
+    <form method="POST" class="iv-form" id="answerForm">
+        {% csrf_token %}
+
+        <!-- Voice bar -->
+        <div class="iv-voice-bar">
+
+            <button type="button" class="iv-mic-btn" id="micBtn" onclick="toggleRecording()" title="Click to record">
+                <span class="mic-icon">🎙️</span>
+                <span class="mic-label" id="micLabel">Record</span>
+            </button>
+
+            <div class="iv-textarea-wrap">
+                <textarea
+                    id="answerBox"
+                    name="answer"
+                    placeholder="Speak using the mic or type your answer here…"
+                    rows="4"
+                ></textarea>
+                <div class="iv-char-hint" id="charHint">0 words</div>
+            </div>
+
+        </div>
+
+        <!-- Submit row -->
+        <div class="iv-submit-row">
+            <button type="button" class="iv-clear-btn" onclick="clearAnswer()">Clear</button>
+            <button type="submit" class="btn-primary iv-submit-btn" id="submitBtn">
+                Submit Answer →
+            </button>
+        </div>
+
+    </form>
+
+</div><!-- /iv-wrap -->
+
+<!-- ── Loading overlay (shown while AI thinks) ────────────── -->
+<div class="iv-loading" id="loadingOverlay" style="display:none;">
+    <div class="iv-loading-card">
+        <div class="iv-spinner"></div>
+        <div class="iv-loading-text">AI is evaluating your answer…</div>
+        <div class="iv-loading-sub">Generating next question</div>
+    </div>
+</div>
+
+<script>
+/* ── Word counter ──────────────────────────────────────────── */
+const answerBox = document.getElementById('answerBox');
+const charHint  = document.getElementById('charHint');
+
+answerBox.addEventListener('input', () => {
+    const words = answerBox.value.trim().split(/\s+/).filter(Boolean).length;
+    charHint.textContent = words + (words === 1 ? ' word' : ' words');
+});
+
+/* ── Loading overlay on submit ────────────────────────────── */
+document.getElementById('answerForm').addEventListener('submit', function(e) {
+    const answer = answerBox.value.trim();
+    if (!answer) {
+        e.preventDefault();
+        answerBox.focus();
+        return;
+    }
+    document.getElementById('loadingOverlay').style.display = 'flex';
+});
+
+/* ── Clear button ─────────────────────────────────────────── */
+function clearAnswer() {
+    answerBox.value = '';
+    charHint.textContent = '0 words';
+    answerBox.focus();
+}
+
+/* ── Web Speech API voice recording ──────────────────────── */
+let recognition = null;
+let isRecording = false;
+
+function toggleRecording() {
+    if (!('SpeechRecognition' in window) && !('webkitSpeechRecognition' in window)) {
+        alert('Voice input is not supported in this browser.\nPlease use Chrome or Edge.');
+        return;
+    }
+
+    if (isRecording) {
+        recognition.stop();
+        return;
+    }
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    recognition = new SpeechRecognition();
+    recognition.lang = 'en-US';
+    recognition.continuous = true;      // keeps recording until stopped
+    recognition.interimResults = true;  // shows partial results as you speak
+
+    const micBtn   = document.getElementById('micBtn');
+    const micLabel = document.getElementById('micLabel');
+
+    recognition.onstart = () => {
+        isRecording = true;
+        micBtn.classList.add('recording');
+        micLabel.textContent = 'Stop';
+    };
+
+    recognition.onend = () => {
+        isRecording = false;
+        micBtn.classList.remove('recording');
+        micLabel.textContent = 'Record';
+    };
+
+    recognition.onerror = (e) => {
+        isRecording = false;
+        micBtn.classList.remove('recording');
+        micLabel.textContent = 'Record';
+        if (e.error !== 'aborted') {
+            alert('Mic error: ' + e.error + '\nMake sure microphone access is allowed.');
+        }
+    };
+
+    recognition.onresult = (event) => {
+        // Build full transcript from all results
+        let finalText   = '';
+        let interimText = '';
+        for (let i = 0; i < event.results.length; i++) {
+            const t = event.results[i][0].transcript;
+            if (event.results[i].isFinal) finalText   += t + ' ';
+            else                          interimText += t;
+        }
+        answerBox.value = finalText + interimText;
+        // Update word count
+        const words = answerBox.value.trim().split(/\s+/).filter(Boolean).length;
+        charHint.textContent = words + (words === 1 ? ' word' : ' words');
+    };
+
+    recognition.start();
+}
+
+/* ── Auto-scroll to feedback when it appears ─────────────── */
+{% if feedback %}
+window.addEventListener('DOMContentLoaded', () => {
+    const fb = document.querySelector('.fb-wrap');
+    if (fb) fb.scrollIntoView({ behavior: 'smooth', block: 'start' });
+});
+{% endif %}
+</script>
+{% endblock %}

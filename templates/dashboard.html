@@ -1,0 +1,191 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — InterviewAI{% endblock %}
+
+{% block content %}
+<div class="dash-wrap">
+
+    <!-- Page header -->
+    <div class="dash-header">
+        <div>
+            <h2>Hey, {{ user.username }} 👋</h2>
+            <p style="color:var(--muted);margin-top:4px;font-size:15px;">
+                Ready to practise? Configure your session below.
+            </p>
+        </div>
+        <a href="{% url 'upload_resume' %}" class="btn-ghost btn-sm">
+            {% if has_resume %}🔄 Update Resume{% else %}📄 Upload Resume{% endif %}
+        </a>
+    </div>
+
+    <!-- Resume status strip -->
+    {% if has_resume %}
+    <div class="resume-strip resume-ok">
+        <div class="resume-strip-left">
+            <span class="resume-ok-icon">✓</span>
+            <div>
+                <div style="font-weight:500;">Resume loaded</div>
+                <div class="resume-meta">
+                    {{ resume.word_count }} words extracted
+                    {% if resume.uploaded_at %}· Updated {{ resume.uploaded_at|date:"M d, Y" }}{% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="resume-preview">{{ resume.extracted_text|truncatewords:14 }}</div>
+    </div>
+    {% else %}
+    <div class="resume-strip resume-warn">
+        <div class="resume-strip-left">
+            <span>⚠</span>
+            <div>
+                <div style="font-weight:500;">No resume uploaded yet</div>
+                <div class="resume-meta">Upload your PDF to enable interviews</div>
+            </div>
+        </div>
+        <a href="{% url 'upload_resume' %}" class="btn-primary btn-sm">Upload Now →</a>
+    </div>
+    {% endif %}
+
+    <!-- Interview Config Card -->
+    <div class="config-card">
+
+        <div class="config-title">
+            <div class="config-dot"></div>
+            Configure Interview Session
+        </div>
+
+        <form method="POST" action="{% url 'configure_interview' %}" class="config-form">
+            {% csrf_token %}
+
+            <!-- Experience Level -->
+            <div class="config-row">
+                <div class="form-group">
+                    <label>Experience Level</label>
+                    <div class="radio-group" id="expGroup">
+                        <label class="radio-pill active">
+                            <input type="radio" name="experience" value="Fresher" checked>
+                            🎓 Fresher
+                        </label>
+                        <label class="radio-pill">
+                            <input type="radio" name="experience" value="Experienced">
+                            💼 Experienced
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-group" id="yearsGroup" style="display:none;">
+                    <label for="years">Years of Experience</label>
+                    <input type="number" name="years" id="years" min="1" max="30"
+                           placeholder="e.g. 3" style="max-width:160px;">
+                </div>
+            </div>
+
+            <!-- Difficulty -->
+            <div class="form-group">
+                <label>Difficulty Level</label>
+                <div class="radio-group">
+                    <label class="radio-pill">
+                        <input type="radio" name="difficulty" value="Easy">
+                        🟢 Easy
+                    </label>
+                    <label class="radio-pill active">
+                        <input type="radio" name="difficulty" value="Medium" checked>
+                        🟡 Medium
+                    </label>
+                    <label class="radio-pill">
+                        <input type="radio" name="difficulty" value="Hard">
+                        🔴 Hard
+                    </label>
+                </div>
+            </div>
+
+            <!-- Interview Type -->
+            <div class="form-group">
+                <label>Interview Type</label>
+                <div class="radio-group">
+                    <label class="radio-pill active">
+                        <input type="radio" name="interview_type" value="Full Interview" checked>
+                        🎯 Full Interview
+                    </label>
+                    <label class="radio-pill">
+                        <input type="radio" name="interview_type" value="Topic-Based">
+                        📚 Topic-Based
+                    </label>
+                    <label class="radio-pill">
+                        <input type="radio" name="interview_type" value="Resume-Based">
+                        📄 Resume-Based
+                    </label>
+                </div>
+            </div>
+
+            <!-- Topic (shown only for Topic-Based) -->
+            <div class="form-group" id="topicGroup" style="display:none;">
+                <label for="topic">
+                    Topic
+                    <span style="color:var(--muted);font-weight:400;font-size:12px;">
+                        — leave blank and AI will vary topics
+                    </span>
+                </label>
+                <input type="text" name="topic" id="topic"
+                       placeholder="e.g. Data Structures, System Design, Python…"
+                       list="topicSuggestions">
+                <datalist id="topicSuggestions">
+                    <option value="Data Structures">
+                    <option value="Algorithms">
+                    <option value="System Design">
+                    <option value="Python">
+                    <option value="JavaScript">
+                    <option value="React">
+                    <option value="Django">
+                    <option value="SQL & Databases">
+                    <option value="Operating Systems">
+                    <option value="Computer Networks">
+                    <option value="Object-Oriented Programming">
+                    <option value="Machine Learning">
+                    <option value="DevOps & Docker">
+                </datalist>
+            </div>
+
+            <!-- Submit -->
+            <div class="config-footer">
+                {% if not has_resume %}
+                <p class="config-warn">⚠ Upload your resume first to start an interview.</p>
+                {% endif %}
+                <button type="submit" class="btn-primary btn-start"
+                        {% if not has_resume %}disabled title="Upload a resume first"{% endif %}>
+                    Start Interview →
+                </button>
+            </div>
+
+        </form>
+    </div>
+
+</div>
+
+<script>
+// Show/hide Years field
+document.querySelectorAll('input[name="experience"]').forEach(r => {
+    r.addEventListener('change', () => {
+        document.getElementById('yearsGroup').style.display =
+            r.value === 'Experienced' ? 'block' : 'none';
+    });
+});
+
+// Show/hide Topic field
+document.querySelectorAll('input[name="interview_type"]').forEach(r => {
+    r.addEventListener('change', () => {
+        document.getElementById('topicGroup').style.display =
+            r.value === 'Topic-Based' ? 'block' : 'none';
+    });
+});
+
+// Radio pill active state
+document.querySelectorAll('.radio-group').forEach(group => {
+    group.querySelectorAll('.radio-pill').forEach(pill => {
+        pill.querySelector('input[type="radio"]').addEventListener('change', function() {
+            group.querySelectorAll('.radio-pill').forEach(p => p.classList.remove('active'));
+            if (this.checked) pill.classList.add('active');
+        });
+    });
+});
+</script>
+{% endblock %}

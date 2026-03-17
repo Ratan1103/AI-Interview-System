@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}Session Complete — InterviewAI{% endblock %}
+
+{% block content %}
+<div class="end-wrap">
+
+    <!-- Hero summary -->
+    <div class="end-hero">
+        <div class="end-trophy">🏁</div>
+        <h2>Session Complete!</h2>
+        <p>You answered <strong>{{ total }}</strong> question{{ total|pluralize }} in this session.</p>
+
+        {% if config %}
+        <div class="end-config-pills">
+            <span class="end-pill">{{ config.difficulty }}</span>
+            <span class="end-pill">{{ config.experience }}</span>
+            {% if config.interview_type %}<span class="end-pill">{{ config.interview_type }}</span>{% endif %}
+            {% if config.topic %}<span class="end-pill">{{ config.topic }}</span>{% endif %}
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Q&A recap -->
+    {% if history %}
+    <div class="end-history">
+        <div class="end-section-label">Session Recap</div>
+
+        {% for item in history %}
+        <div class="end-qa-card">
+            <div class="end-qa-num">Q{{ forloop.counter }}</div>
+            <div class="end-qa-content">
+                <div class="end-qa-question">{{ item.question }}</div>
+                <div class="end-qa-answer">{{ item.answer }}</div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div style="text-align:center;color:var(--muted);padding:40px 0;">
+        No answers recorded this session.
+    </div>
+    {% endif %}
+
+    <!-- Actions -->
+    <div class="end-actions">
+        <a href="{% url 'dashboard' %}" class="btn-primary">Practice Again →</a>
+        <a href="{% url 'home' %}" class="btn-ghost">Back to Home</a>
+    </div>
+
+</div>
+{% endblock %}

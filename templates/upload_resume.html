@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block title %}Upload Resume — InterviewAI{% endblock %}
+
+{% block content %}
+<div class="auth-wrap">
+    <div class="auth-card">
+
+        <div class="auth-header">
+            <div class="auth-logo-dot" style="background:var(--accent2)"></div>
+            <h2>Upload Your Resume</h2>
+            <p>We'll extract your skills and tailor questions to your profile</p>
+        </div>
+
+        {% if error %}
+        <div class="form-error-banner">{{ error }}</div>
+        {% endif %}
+
+        <form method="POST" enctype="multipart/form-data" class="auth-form">
+            {% csrf_token %}
+
+            <div class="upload-zone" id="uploadZone">
+                <div class="upload-icon">📄</div>
+                <div class="upload-label">Drop your PDF here or <span class="upload-link">browse</span></div>
+                <div class="upload-hint">PDF only · Max 5MB</div>
+                <input type="file" name="resume" id="resumeInput" accept=".pdf" required>
+                <div class="upload-filename" id="fileName"></div>
+            </div>
+
+            <button type="submit" class="btn-primary btn-full" id="uploadBtn">
+                Upload &amp; Extract →
+            </button>
+        </form>
+
+        <p class="auth-footer">
+            <a href="{% url 'dashboard' %}">← Back to Dashboard</a>
+        </p>
+
+    </div>
+</div>
+
+<script>
+const zone  = document.getElementById('uploadZone');
+const input = document.getElementById('resumeInput');
+const label = document.getElementById('fileName');
+
+// Click anywhere in the zone to trigger file picker
+zone.addEventListener('click', () => input.click());
+
+input.addEventListener('change', () => {
+    if (input.files.length) {
+        label.textContent = '✓ ' + input.files[0].name;
+        zone.classList.add('zone-selected');
+    }
+});
+
+// Drag & drop
+zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('zone-drag'); });
+zone.addEventListener('dragleave', () => zone.classList.remove('zone-drag'));
+zone.addEventListener('drop', e => {
+    e.preventDefault();
+    zone.classList.remove('zone-drag');
+    const files = e.dataTransfer.files;
+    if (files.length && files[0].type === 'application/pdf') {
+        // Use DataTransfer to assign files to input (cross-browser)
+        const dt = new DataTransfer();
+        dt.items.add(files[0]);
+        input.files = dt.files;
+        label.textContent = '✓ ' + files[0].name;
+        zone.classList.add('zone-selected');
+    } else if (files.length) {
+        label.textContent = '✗ Only PDF files are supported';
+        label.style.color = 'var(--accent3)';
+    }
+});
+</script>
+{% endblock %}

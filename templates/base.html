@@ -1,0 +1,57 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}InterviewAI{% endblock %}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+
+<div class="wrap">
+
+    <!-- Background decoration -->
+    <div class="grid-bg"></div>
+    <div class="orb orb1"></div>
+    <div class="orb orb2"></div>
+
+    <!-- NAVBAR -->
+    <nav>
+        <a href="{% url 'home' %}" class="logo">
+            <div class="logo-dot"></div>
+            InterviewAI
+        </a>
+
+        <div class="nav-links">
+            {% if user.is_authenticated %}
+                <span class="nav-user">{{ user.username }}</span>
+                <a href="{% url 'dashboard' %}">Dashboard</a>
+                <a href="{% url 'logout' %}" class="nav-btn nav-btn-ghost">Logout</a>
+            {% else %}
+                <a href="{% url 'login' %}">Login</a>
+                <a href="{% url 'register' %}" class="nav-btn">Get Started</a>
+            {% endif %}
+        </div>
+    </nav>
+
+    <!-- Django messages (success / error toasts) -->
+    {% if messages %}
+    <div class="messages-wrap">
+        {% for message in messages %}
+        <div class="toast toast-{{ message.tags }}">
+            {{ message }}
+            <button class="toast-close" onclick="this.parentElement.remove()">×</button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {% block content %}{% endblock %}
+
+</div>
+
+<script src="{% static 'js/main.js' %}" defer></script>
+</body>
+</html>
