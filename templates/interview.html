@@ -10,6 +10,10 @@
             <span class="iv-live-dot"></span>
             <span class="iv-label">LIVE SESSION</span>
             <span class="iv-sep">·</span>
+            {% if config.role %}
+            <span class="iv-label" style="color:var(--accent2);font-weight:700;">{{ config.role }}</span>
+            <span class="iv-sep">·</span>
+            {% endif %}
             <span class="iv-label">{{ config.difficulty|upper }}</span>
             <span class="iv-sep">·</span>
             <span class="iv-label">{{ config.experience|upper }}</span>

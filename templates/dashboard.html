@@ -116,7 +116,81 @@
                     </label>
                 </div>
             </div>
-
+            <!-- Target Role -->
+<div class="form-group">
+    <label>Target Role</label>
+    <div class="role-grid">
+        <label class="role-pill active">
+            <input type="radio" name="role" value="Software Engineer" checked>
+            <span class="role-icon">💻</span>
+            <span class="role-name">Software Engineer</span>
+        </label>
+        <label class="role-pill">
+            <input type="radio" name="role" value="Frontend Developer">
+            <span class="role-icon">🎨</span>
+            <span class="role-name">Frontend Developer</span>
+        </label>
+        <label class="role-pill">
+            <input type="radio" name="role" value="Backend Developer">
+            <span class="role-icon">⚙️</span>
+            <span class="role-name">Backend Developer</span>
+        </label>
+        <label class="role-pill">
+            <input type="radio" name="role" value="Full Stack Developer">
+            <span class="role-icon">🔗</span>
+            <span class="role-name">Full Stack Developer</span>
+        </label>
+        <label class="role-pill">
+            <input type="radio" name="role" value="Data Scientist">
+            <span class="role-icon">📊</span>
+            <span class="role-name">Data Scientist</span>
+        </label>
+        <label class="role-pill">
+            <input type="radio" name="role" value="ML Engineer">
+            <span class="role-icon">🤖</span>
+            <span class="role-name">ML Engineer</span>
+        </label>
+        <label class="role-pill">
+            <input type="radio" name="role" value="DevOps Engineer">
+            <span class="role-icon">🚀</span>
+            <span class="role-name">DevOps Engineer</span>
+        </label>
+        <label class="role-pill">
+            <input type="radio" name="role" value="Data Analyst">
+            <span class="role-icon">📈</span>
+            <span class="role-name">Data Analyst</span>
+        </label>
+        <label class="role-pill">
+            <input type="radio" name="role" value="Cloud Engineer">
+            <span class="role-icon">☁️</span>
+            <span class="role-name">Cloud Engineer</span>
+        </label>
+        <label class="role-pill">
+            <input type="radio" name="role" value="Android Developer">
+            <span class="role-icon">📱</span>
+            <span class="role-name">Android Developer</span>
+        </label>
+        <label class="role-pill">
+            <input type="radio" name="role" value="iOS Developer">
+            <span class="role-icon">🍎</span>
+            <span class="role-name">iOS Developer</span>
+        </label>
+        <label class="role-pill">
+            <input type="radio" name="role" value="QA Engineer">
+            <span class="role-icon">🧪</span>
+            <span class="role-name">QA Engineer</span>
+        </label>
+    </div>
+    <!-- Custom role -->
+    <div id="roleCustomWrap" style="display:none; margin-top:10px;">
+        <input type="text" id="roleCustomInput"
+               placeholder="Type your role e.g. Site Reliability Engineer…">
+    </div>
+    <button type="button" class="role-custom-btn" id="roleCustomBtn"
+            onclick="toggleCustomRole()">
+        + Enter custom role
+    </button>
+</div>
             <!-- Topic (shown only for Topic-Based) -->
             <div class="form-group" id="topicGroup" style="display:none;">
                 <label for="topic">
@@ -187,5 +261,47 @@ document.querySelectorAll('.radio-group').forEach(group => {
         });
     });
 });
+// Role grid active state
+document.querySelectorAll('.role-pill').forEach(pill => {
+    pill.addEventListener('click', function() {
+        document.querySelectorAll('.role-pill').forEach(p => p.classList.remove('active'));
+        this.classList.add('active');
+        const radio = this.querySelector('input[type="radio"]');
+        radio.name = 'role';
+        radio.checked = true;
+        // Hide custom input if a preset is picked
+        document.getElementById('roleCustomWrap').style.display = 'none';
+        document.getElementById('roleCustomInput').name = '';
+        document.getElementById('roleCustomBtn').textContent = '+ Enter custom role';
+    });
+});
+
+// Custom role toggle
+function toggleCustomRole() {
+    const wrap  = document.getElementById('roleCustomWrap');
+    const input = document.getElementById('roleCustomInput');
+    const btn   = document.getElementById('roleCustomBtn');
+
+    if (wrap.style.display === 'none') {
+        wrap.style.display = 'block';
+        input.name = 'role';
+        input.focus();
+        btn.textContent = '✕ Cancel custom role';
+        document.querySelectorAll('.role-pill').forEach(p => {
+            p.classList.remove('active');
+            p.querySelector('input').name = '_role_disabled';
+        });
+    } else {
+        wrap.style.display = 'none';
+        input.name = '';
+        btn.textContent = '+ Enter custom role';
+        document.querySelectorAll('.role-pill').forEach(p => {
+            p.querySelector('input').name = 'role';
+        });
+        const first = document.querySelector('.role-pill');
+        first.classList.add('active');
+        first.querySelector('input').checked = true;
+    }
+}
 </script>
 {% endblock %}

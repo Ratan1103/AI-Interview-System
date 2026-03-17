@@ -1,6 +1,8 @@
 from pathlib import Path
 import os
 
+ALLOWED_HOSTS = ["*"]
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # ── Load .env file automatically (development convenience) ────────────────────
@@ -89,6 +91,7 @@ USE_TZ = True
 # ── Static & Media ────────────────────────────────────────────────────────────
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'

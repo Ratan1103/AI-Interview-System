@@ -148,6 +148,7 @@ def configure_interview(request):
     difficulty     = request.POST.get('difficulty', 'Medium')
     interview_type = request.POST.get('interview_type', 'Full Interview')
     topic          = request.POST.get('topic', '').strip() or None
+    role           = request.POST.get('role', '').strip() or None
 
     resume = Resume.objects.filter(user=request.user).first()
     if not resume or not resume.extracted_text:
@@ -161,6 +162,7 @@ def configure_interview(request):
         'difficulty':     difficulty,
         'interview_type': interview_type,
         'topic':          topic,
+        'role':           role,
     }
     request.session['interview_question'] = None
     request.session['interview_history']  = []
@@ -194,6 +196,7 @@ def interview(request):
     years          = config.get('years', '')
     difficulty     = config.get('difficulty', 'Medium')
     topic          = config.get('topic')
+    role           = config.get('role')
 
     exp_label = experience
     if experience == 'Experienced' and years:
@@ -207,6 +210,7 @@ def interview(request):
                 experience=exp_label,
                 difficulty=difficulty,
                 topic=topic,
+                role=role,
             )
         except Exception as e:
             messages.error(request, f'AI error: {e}. Please check your Gemini API key.')
@@ -245,6 +249,7 @@ def interview(request):
             experience=exp_label,
             difficulty=difficulty,
             topic=topic,
+            role=role,
             history=history,
             current_question=current_question,
             candidate_answer=answer,

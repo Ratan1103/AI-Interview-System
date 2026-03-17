@@ -1,27 +1,14 @@
-"""
-AI integration module — Gemini API.
-
-All intelligence lives here:
-  - generate_first_question()  → opening question for a session
-  - get_feedback_and_next()    → evaluate answer + return next question (JSON)
-"""
-
 import json
 import google.generativeai as genai
 from django.conf import settings
 
 
 def _get_model():
-    """
-    Initialise Gemini lazily — avoids crashing on startup if the key
-    is not yet set (e.g. during `manage.py migrate`).
-    """
     genai.configure(api_key=settings.GEMINI_API_KEY)
     return genai.GenerativeModel("gemini-3-flash-preview")
 
 
 def _clean_json(raw: str) -> str:
-    """Strip markdown code fences Gemini sometimes wraps around JSON."""
     raw = raw.strip()
     if raw.startswith("```"):
         raw = raw.split("\n", 1)[-1]
@@ -29,30 +16,29 @@ def _clean_json(raw: str) -> str:
     return raw.strip()
 
 
-def generate_first_question(resume, experience, difficulty, topic):
-    """
-    Generate the opening question for a new interview session.
-    Returns a plain string (the question text).
-    """
+def generate_first_question(resume, experience, difficulty, topic, role):
     topic_line = (
         f"Topic: {topic}" if topic
-        else "Topic: AI's choice — vary topics naturally across the session"
+        else f"Topic: AI's choice — pick topics relevant to a {role} role"
     )
 
-    prompt = f"""You are a professional technical interviewer starting a real interview.
+    prompt = f"""You are a professional technical interviewer conducting a real interview
+for the role of {role}.
 
 Candidate Resume:
 {resume[:3000]}
 
+Target Role:      {role}
 Experience Level: {experience}
-Difficulty: {difficulty}
+Difficulty:       {difficulty}
 {topic_line}
 
 Instructions:
-- Ask ONLY ONE interview question
-- Make it realistic and role-relevant
+- Ask ONLY ONE interview question, relevant to the {role} role
+- Make it realistic — the kind of question actually asked for this role
 - Match the difficulty strictly
-- Do NOT include any preamble or explanation — just the question itself
+- Use the resume context to personalise if possible
+- Do NOT include any preamble — just the question itself
 
 Respond with ONLY the question text. Nothing else."""
 
@@ -61,18 +47,11 @@ Respond with ONLY the question text. Nothing else."""
     return response.text.strip()
 
 
-def get_feedback_and_next(resume, experience, difficulty, topic,
+def get_feedback_and_next(resume, experience, difficulty, topic, role,
                           history, current_question, candidate_answer):
-    """
-    Evaluate the candidate's answer and generate the next question.
-
-    Returns a dict with keys:
-        correctness, missing_points, improvements,
-        sample_answer, encouragement, next_question
-    """
     topic_line = (
         f"Topic: {topic}" if topic
-        else "Topic: not fixed — switch topics naturally based on performance"
+        else f"Topic: not fixed — vary topics relevant to a {role} role"
     )
 
     history_text = ""
@@ -84,12 +63,14 @@ def get_feedback_and_next(resume, experience, difficulty, topic,
         )
 
     prompt = f"""You are a professional technical interviewer evaluating a candidate's answer.
+The candidate is interviewing for the role of {role}.
 
 Candidate Resume:
 {resume[:2000]}
 
+Target Role:      {role}
 Experience Level: {experience}
-Difficulty: {difficulty}
+Difficulty:       {difficulty}
 {topic_line}
 
 Previous Q&A History:
@@ -103,12 +84,12 @@ Candidate's Answer:
 
 Your Tasks:
 1. Evaluate the answer honestly but supportively.
-2. Generate the NEXT interview question based on performance:
+2. Generate the NEXT interview question for a {role} candidate:
    - If answer was weak → go deeper on the same concept
-   - If answer was strong → move to a new relevant topic
+   - If answer was strong → move to a new topic relevant to {role}
    - Always respect the difficulty level
    - If topic is fixed → stay within it
-   - If topic is free → vary topics naturally
+   - If topic is free → vary topics naturally for a {role} interview
 
 Respond ONLY with a valid JSON object (no markdown fences, no extra text):
 {{
@@ -117,7 +98,7 @@ Respond ONLY with a valid JSON object (no markdown fences, no extra text):
   "improvements": "Specific suggestions to improve the answer.",
   "sample_answer": "A concise ideal answer.",
   "encouragement": "One encouraging sentence.",
-  "next_question": "The next interview question (just the question text)."
+  "next_question": "The next interview question for a {role} role (just the question text)."
 }}"""
 
     model = _get_model()

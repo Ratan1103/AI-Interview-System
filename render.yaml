@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: ai-interview-system
+    env: python
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "gunicorn ai_resume.wsgi:application"
+    envVars:
+      - key: DJANGO_SETTINGS_MODULE
+        value: ai_resume.settings
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DEBUG
+        value: False
