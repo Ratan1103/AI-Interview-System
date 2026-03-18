@@ -880,3 +880,221 @@ nav {
   background: linear-gradient(90deg, var(--accent), var(--accent2));
   border-radius: 2px;
 }
+
+/* ============================================================
+   MOBILE RESPONSIVENESS
+   All fixes in one place — no template changes needed.
+   Breakpoints used:
+     480px  — small phones (iPhone SE, Galaxy A series)
+     640px  — large phones / small tablets
+   ============================================================ */
+
+@media (max-width: 640px) {
+
+  /* ── 1. Navbar ─────────────────────────────────────────── */
+  nav {
+    padding: 14px 16px;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .nav-user { display: none; } /* hide username chip — saves space */
+
+  .nav-links { gap: 12px; }
+
+  .nav-links a { font-size: 13px; }
+
+  .nav-btn { padding: 7px 14px; font-size: 13px; }
+
+  /* ── 2. Hero heading ───────────────────────────────────── */
+  .hero {
+    padding: 48px 20px 40px;
+  }
+
+  .hero h1 { font-size: 36px; }
+
+  .hero p { font-size: 15px; }
+
+  /* ── 3. Stats row ──────────────────────────────────────── */
+  .stats { gap: 24px; }
+
+  .stat-num { font-size: 22px; }
+
+  /* ── 4 & 5 & 6. Section paddings ──────────────────────── */
+  .features        { padding: 40px 20px; }
+  .flow-section    { padding: 0 20px 40px; }
+  .home-cta-footer { padding: 40px 20px 60px; }
+
+  .features-heading   { font-size: 22px; }
+  .home-cta-heading   { font-size: 24px; }
+  .section-title      { font-size: 11px; }
+
+  /* ── 7. Auth card ──────────────────────────────────────── */
+  .auth-card  { padding: 28px 20px; border-radius: 16px; }
+  .auth-header h2 { font-size: 22px; }
+
+  /* ── 8 & 9. Dashboard ──────────────────────────────────── */
+  .dash-wrap  { padding: 24px 16px 60px; }
+  .config-card { padding: 20px 16px; border-radius: 16px; }
+  .config-title { font-size: 15px; }
+
+  /* ── 10. Resume preview ────────────────────────────────── */
+  .resume-preview { display: none; } /* hide truncated text on mobile — too cramped */
+  .resume-strip   { padding: 12px 16px; }
+
+  /* ── 11. Interview topbar ──────────────────────────────── */
+  .iv-topbar {
+    padding: 12px 14px;
+    border-radius: 12px;
+    margin-bottom: 16px;
+  }
+
+  .iv-meta {
+    font-size: 10px;
+    gap: 6px;
+    letter-spacing: 0.04em;
+  }
+
+  .iv-sep { display: none; } /* hide · dots on mobile — replaced by wrapping */
+
+  .iv-label {
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 3px 8px;
+    font-size: 10px;
+  }
+
+  .iv-end-btn { padding: 5px 10px; font-size: 12px; }
+
+  .iv-qcount  { padding: 4px 10px; font-size: 12px; }
+
+  /* ── 12. Question block ────────────────────────────────── */
+  .iv-question-block {
+    padding: 20px 16px 18px;
+    border-radius: 14px;
+  }
+
+  .iv-qtext { font-size: 16px; }
+
+  /* ── 13. Voice bar — stack mic above textarea on mobile ── */
+  .iv-voice-bar {
+    flex-direction: column;
+    gap: 12px;
+    padding: 14px;
+  }
+
+  .iv-mic-btn {
+    flex-direction: row;       /* horizontal on mobile — icon + label side by side */
+    width: 100%;
+    justify-content: center;
+    padding: 10px 16px;
+    border-radius: 10px;
+    gap: 8px;
+  }
+
+  .mic-icon  { font-size: 18px; }
+  .mic-label { font-size: 13px; }
+
+  /* ── 14. Submit row ────────────────────────────────────── */
+  .iv-submit-row {
+    flex-direction: column-reverse; /* submit on top, clear below */
+    gap: 8px;
+  }
+
+  .iv-submit-btn { width: 100%; text-align: center; }
+  .iv-clear-btn  { width: 100%; text-align: center; }
+
+  /* ── 15. IV wrap ───────────────────────────────────────── */
+  .iv-wrap { padding: 16px 14px 80px; }
+
+  /* ── 16. Loading card ──────────────────────────────────── */
+  .iv-loading-card {
+    padding: 32px 24px;
+    margin: 0 16px;
+    border-radius: 16px;
+  }
+
+  /* ── 17. TTS bar ───────────────────────────────────────── */
+  .tts-bar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .tts-btn { width: 100%; justify-content: center; }
+
+  .tts-speed-group { width: 100%; justify-content: flex-start; }
+
+  .tts-voice-badge {
+    max-width: 100%;
+    width: 100%;
+    text-align: center;
+  }
+
+  /* ── 18. Role grid ─────────────────────────────────────── */
+  .role-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+
+  .role-pill { padding: 12px 8px; border-radius: 10px; }
+  .role-icon { font-size: 20px; }
+  .role-name { font-size: 11px; }
+
+  /* ── 19. Toast ─────────────────────────────────────────── */
+  .messages-wrap { left: 12px; right: 12px; top: 60px; }
+
+  .toast {
+    min-width: unset;
+    width: 100%;
+    font-size: 13px;
+  }
+
+  /* ── Interview end page ────────────────────────────────── */
+  .end-wrap   { padding: 32px 16px 60px; }
+  .end-hero h2 { font-size: 24px; }
+  .end-trophy  { font-size: 40px; }
+
+  .end-qa-card { padding: 14px 16px; gap: 12px; }
+
+  /* ── Feedback cards ────────────────────────────────────── */
+  .fb-encourage { font-size: 14px; padding: 14px 16px; }
+  .fb-card      { padding: 14px 16px; }
+
+  /* ── Buttons full width on small screens ───────────────── */
+  .end-actions {
+    flex-direction: column;
+  }
+  .end-actions .btn-primary,
+  .end-actions .btn-ghost {
+    width: 100%;
+    text-align: center;
+  }
+
+  /* ── Upload zone ───────────────────────────────────────── */
+  .upload-zone { padding: 28px 16px; }
+
+}
+
+/* ── 480px — very small phones (iPhone SE 375px, Galaxy A13) ── */
+@media (max-width: 480px) {
+
+  .hero h1 { font-size: 30px; }
+
+  .hero p  { font-size: 14px; }
+
+  .stats { flex-wrap: wrap; gap: 20px; justify-content: center; }
+
+  .stat { min-width: 80px; }
+
+  .iv-qtext { font-size: 15px; line-height: 1.5; }
+
+  .config-card { padding: 16px 14px; }
+
+  .auth-card { padding: 24px 16px; }
+
+  .role-name { font-size: 10px; }
+
+  .role-pill { padding: 10px 6px; }
+
+  .iv-topbar { padding: 10px 12px; }
+
+}
