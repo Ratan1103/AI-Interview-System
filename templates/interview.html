@@ -73,9 +73,43 @@
             </div>
 
             <div class="fb-card fb-card-purple">
-                <div class="fb-card-title">🧠 SAMPLE ANSWER</div>
-                <p>{{ feedback.sample_answer }}</p>
-            </div>
+    <div class="fb-card-title">🧠 SAMPLE ANSWER</div>
+    <p id="sampleAnswerText">{{ feedback.sample_answer }}</p>
+
+    <!-- TTS Controls -->
+    <div class="tts-bar">
+
+        <!-- Play / Stop -->
+        <button type="button" class="tts-btn tts-play" id="ttsPlayBtn"
+                onclick="ttsToggle()" title="Read aloud">
+            <span id="ttsIcon">▶</span>
+            <span id="ttsLabel">Listen</span>
+        </button>
+
+        <!-- Speed selector -->
+        <div class="tts-speed-group">
+            <span class="tts-speed-label">Speed</span>
+            <button type="button" class="tts-speed-btn" data-speed="0.75"
+                    onclick="ttsSetSpeed(this)">0.75×</button>
+            <button type="button" class="tts-speed-btn active" data-speed="1"
+                    onclick="ttsSetSpeed(this)">1×</button>
+            <button type="button" class="tts-speed-btn" data-speed="1.25"
+                    onclick="ttsSetSpeed(this)">1.25×</button>
+        </div>
+
+        <!-- Voice indicator badge -->
+        <span class="tts-voice-badge" id="ttsVoiceBadge" title="Active voice">
+            Detecting voice…
+        </span>
+
+    </div>
+
+    <!-- Progress bar -->
+    <div class="tts-progress-wrap" id="ttsProgressWrap" style="display:none;">
+        <div class="tts-progress-bar" id="ttsProgressBar"></div>
+    </div>
+
+</div>
 
         </div>
     </div>
@@ -89,6 +123,12 @@
         </div>
 
         <div class="iv-qtext" id="questionText">{{ question }}</div>
+
+<button type="button" class="tts-btn tts-question-btn" id="ttsQuestionBtn"
+        onclick="ttsToggleQuestion()" title="Listen to question">
+    <span id="ttsQIcon">▶</span>
+    <span id="ttsQLabel">Listen to Question</span>
+</button>
 
     </div>
 
@@ -227,6 +267,287 @@ function toggleRecording() {
 
     recognition.start();
 }
+
+/* ── Text-to-Speech — Indian English accent ───────────────── */
+/* ── Text-to-Speech — Indian English, full controls ─────── */
+
+const TTS = {
+    utterance:   null,
+    speed:       1.0,
+    speaking:    false,
+    voices:      [],
+    selectedVoice: null,
+    progressTimer: null,
+};
+
+// Load all available voices and pick the best Indian English one
+function ttsLoadVoices() {
+    TTS.voices = window.speechSynthesis.getVoices();
+    if (!TTS.voices.length) return;
+
+    /*
+      Priority chain for Indian English:
+      1. Exact lang match  en-IN
+      2. Voice name contains known Indian TTS names
+      3. Any English voice as last resort
+    */
+    const knownIndianNames = ['ravi', 'veena', 'lekha', 'aditi', 'neerja', 'hemant'];
+
+    TTS.selectedVoice =
+        TTS.voices.find(v => v.lang === 'en-IN')                                        ||
+        TTS.voices.find(v => v.lang.startsWith('en-IN'))                                ||
+        TTS.voices.find(v => knownIndianNames.some(n => v.name.toLowerCase().includes(n))) ||
+        TTS.voices.find(v => v.lang.startsWith('en'))                                   ||
+        TTS.voices[0];
+
+    // Update the badge to show which voice is active
+    const badge = document.getElementById('ttsVoiceBadge');
+    if (badge && TTS.selectedVoice) {
+        const isIndian = TTS.selectedVoice.lang === 'en-IN' ||
+                         TTS.selectedVoice.lang.startsWith('en-IN');
+        badge.textContent  = TTS.selectedVoice.name;
+        badge.title        = `Lang: ${TTS.selectedVoice.lang}`;
+        badge.style.background = isIndian
+            ? 'rgba(79,216,180,0.15)'
+            : 'rgba(247,201,111,0.15)';
+        badge.style.borderColor = isIndian
+            ? 'rgba(79,216,180,0.4)'
+            : 'rgba(247,201,111,0.4)';
+        badge.style.color = isIndian
+            ? 'var(--accent2)'
+            : 'var(--warn)';
+        badge.title = isIndian
+            ? `✓ Indian English voice — ${TTS.selectedVoice.lang}`
+            : `⚠ Indian voice not available on this device. Using: ${TTS.selectedVoice.name}`;
+    }
+}
+
+// Voices are async in most browsers
+if (typeof speechSynthesis !== 'undefined') {
+    ttsLoadVoices();
+    speechSynthesis.onvoiceschanged = ttsLoadVoices;
+}
+
+function ttsToggle() {
+    if (!('speechSynthesis' in window)) {
+        alert('Text-to-speech is not supported in this browser.\nPlease use Chrome or Edge.');
+        return;
+    }
+
+    if (TTS.speaking) {
+        ttsStop();
+        return;
+    }
+
+    ttsSpeak();
+}
+
+function ttsSpeak() {
+    const text = document.getElementById('sampleAnswerText')?.innerText?.trim();
+    if (!text) return;
+
+    window.speechSynthesis.cancel(); // clear queue
+
+    TTS.utterance = new SpeechSynthesisUtterance(text);
+    TTS.utterance.lang   = 'en-IN';
+    TTS.utterance.rate   = TTS.speed;
+    TTS.utterance.pitch  = 1.05;   // slightly higher — natural Indian cadence
+    TTS.utterance.volume = 1.0;
+
+    if (TTS.selectedVoice) {
+        TTS.utterance.voice = TTS.selectedVoice;
+    }
+
+    TTS.utterance.onstart = () => {
+        TTS.speaking = true;
+        ttsSetUI(true);
+        ttsStartProgress(text);
+    };
+
+    TTS.utterance.onend = () => {
+        TTS.speaking = false;
+        ttsSetUI(false);
+        ttsStopProgress(true);
+    };
+
+    TTS.utterance.onerror = (e) => {
+        TTS.speaking = false;
+        ttsSetUI(false);
+        ttsStopProgress(false);
+        if (e.error !== 'interrupted' && e.error !== 'canceled') {
+            console.warn('TTS error:', e.error);
+        }
+    };
+
+    window.speechSynthesis.speak(TTS.utterance);
+}
+
+function ttsStop() {
+    window.speechSynthesis.cancel();
+    TTS.speaking = false;
+    ttsSetUI(false);
+    ttsStopProgress(false);
+}
+
+// Update play/stop button UI
+function ttsSetUI(playing) {
+    const icon  = document.getElementById('ttsIcon');
+    const label = document.getElementById('ttsLabel');
+    const btn   = document.getElementById('ttsPlayBtn');
+    if (!icon || !label || !btn) return;
+
+    if (playing) {
+        icon.textContent  = '⏹';
+        label.textContent = 'Stop';
+        btn.classList.add('tts-playing');
+    } else {
+        icon.textContent  = '▶';
+        label.textContent = 'Listen';
+        btn.classList.remove('tts-playing');
+    }
+}
+
+// Speed control
+function ttsSetSpeed(btn) {
+    TTS.speed = parseFloat(btn.dataset.speed);
+    document.querySelectorAll('.tts-speed-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+
+    // If currently speaking, restart at new speed
+    if (TTS.speaking) {
+        ttsStop();
+        setTimeout(ttsSpeak, 150);
+    }
+}
+
+// Animated progress bar (time-based estimate)
+function ttsStartProgress(text) {
+    const wrap = document.getElementById('ttsProgressWrap');
+    const bar  = document.getElementById('ttsProgressBar');
+    if (!wrap || !bar) return;
+
+    wrap.style.display = 'block';
+    bar.style.width    = '0%';
+    bar.style.transition = 'none';
+
+    // Estimate duration: ~130 words/min at speed 1×
+    const words    = text.split(/\s+/).length;
+    const duration = (words / (130 * TTS.speed)) * 60 * 1000; // ms
+
+    // Animate smoothly
+    setTimeout(() => {
+        bar.style.transition = `width ${duration}ms linear`;
+        bar.style.width      = '100%';
+    }, 50);
+
+    TTS.progressTimer = setTimeout(() => {}, duration);
+}
+
+function ttsStopProgress(completed) {
+    const wrap = document.getElementById('ttsProgressWrap');
+    const bar  = document.getElementById('ttsProgressBar');
+    if (!wrap || !bar) return;
+
+    if (completed) {
+        bar.style.width = '100%';
+        setTimeout(() => {
+            wrap.style.display = 'none';
+            bar.style.transition = 'none';
+            bar.style.width = '0%';
+        }, 500);
+    } else {
+        wrap.style.display = 'none';
+        bar.style.transition = 'none';
+        bar.style.width = '0%';
+    }
+
+    clearTimeout(TTS.progressTimer);
+}
+
+// Question TTS — reuses the same voice/speed settings as sample answer
+let ttsSpeakingQuestion = false;
+
+function ttsToggleQuestion() {
+    if (!('speechSynthesis' in window)) {
+        alert('Text-to-speech is not supported in this browser.\nPlease use Chrome or Edge.');
+        return;
+    }
+
+    if (ttsSpeakingQuestion) {
+        ttsStopQuestion();
+        return;
+    }
+
+    // Stop sample answer if it's playing
+    if (TTS.speaking) ttsStop();
+
+    ttsSpeakQuestion();
+}
+
+function ttsSpeakQuestion() {
+    const text = document.getElementById('questionText')?.innerText?.trim();
+    if (!text) return;
+
+    window.speechSynthesis.cancel();
+
+    const utterance     = new SpeechSynthesisUtterance(text);
+    utterance.lang      = 'en-IN';
+    utterance.rate      = TTS.speed;   // respects whatever speed user picked
+    utterance.pitch     = 1.05;
+    utterance.volume    = 1.0;
+
+    if (TTS.selectedVoice) {
+        utterance.voice = TTS.selectedVoice;
+    }
+
+    utterance.onstart = () => {
+        ttsSpeakingQuestion = true;
+        ttsSetQuestionUI(true);
+    };
+
+    utterance.onend = () => {
+        ttsSpeakingQuestion = false;
+        ttsSetQuestionUI(false);
+    };
+
+    utterance.onerror = (e) => {
+        ttsSpeakingQuestion = false;
+        ttsSetQuestionUI(false);
+        if (e.error !== 'interrupted' && e.error !== 'canceled') {
+            console.warn('TTS question error:', e.error);
+        }
+    };
+
+    window.speechSynthesis.speak(utterance);
+}
+
+function ttsStopQuestion() {
+    window.speechSynthesis.cancel();
+    ttsSpeakingQuestion = false;
+    ttsSetQuestionUI(false);
+}
+
+function ttsSetQuestionUI(playing) {
+    const icon  = document.getElementById('ttsQIcon');
+    const label = document.getElementById('ttsQLabel');
+    const btn   = document.getElementById('ttsQuestionBtn');
+    if (!icon || !label || !btn) return;
+
+    if (playing) {
+        icon.textContent  = '⏹';
+        label.textContent = 'Stop';
+        btn.classList.add('tts-playing');
+    } else {
+        icon.textContent  = '▶';
+        label.textContent = 'Listen to Question';
+        btn.classList.remove('tts-playing');
+    }
+}
+
+// Always stop speech on page leave
+window.addEventListener('beforeunload', () => window.speechSynthesis.cancel());
+window.addEventListener('pagehide',     () => window.speechSynthesis.cancel());
+
 
 /* ── Auto-scroll to feedback when it appears ─────────────── */
 {% if feedback %}
