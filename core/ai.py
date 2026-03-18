@@ -16,42 +16,72 @@ def _clean_json(raw: str) -> str:
     return raw.strip()
 
 
+# 🔥 COMMON RULES FOR QUESTION QUALITY
+QUESTION_RULES = """
+Question Rules:
+- Ask ONLY ONE question
+- Focus on ONLY ONE concept (no multi-part questions)
+- Keep the question SHORT (max 25 words, 2–3 lines max)
+- Make it clear and easy to understand
+- Avoid long scenario-based or multi-layered questions
+
+Difficulty Rules:
+- Easy → basic definitions or simple concepts
+- Medium → one concept + practical reasoning (NO system design)
+- Hard → may include system design or deeper reasoning
+"""
+
+
+# 🚀 FIRST QUESTION
 def generate_first_question(resume, experience, difficulty, topic, role):
     topic_line = (
-        f"Topic: {topic}" if topic
-        else f"Topic: AI's choice — pick topics relevant to a {role} role"
+        f"Topic: {topic}"
+        if topic
+        else f"Topic: Choose relevant topics for a {role} role"
     )
 
-    prompt = f"""You are a professional technical interviewer conducting a real interview
-for the role of {role}.
+    prompt = f"""You are a professional technical interviewer.
+
+The candidate is applying for: {role}
 
 Candidate Resume:
-{resume[:3000]}
+{resume[:2000]}
 
-Target Role:      {role}
 Experience Level: {experience}
-Difficulty:       {difficulty}
+Difficulty Level: {difficulty}
 {topic_line}
 
-Instructions:
-- Ask ONLY ONE interview question, relevant to the {role} role
-- Make it realistic — the kind of question actually asked for this role
-- Match the difficulty strictly
-- Use the resume context to personalise if possible
-- Do NOT include any preamble — just the question itself
+{QUESTION_RULES}
 
-Respond with ONLY the question text. Nothing else."""
+Instructions:
+- Ask a realistic interview question for the {role} role
+- Keep it simple, clear, and focused
+- DO NOT ask system design questions for Easy/Medium
+- DO NOT combine multiple topics
+
+Respond with ONLY the question text.
+"""
 
     model = _get_model()
     response = model.generate_content(prompt)
     return response.text.strip()
 
 
-def get_feedback_and_next(resume, experience, difficulty, topic, role,
-                          history, current_question, candidate_answer):
+# 🚀 FEEDBACK + NEXT QUESTION
+def get_feedback_and_next(
+    resume,
+    experience,
+    difficulty,
+    topic,
+    role,
+    history,
+    current_question,
+    candidate_answer,
+):
     topic_line = (
-        f"Topic: {topic}" if topic
-        else f"Topic: not fixed — vary topics relevant to a {role} role"
+        f"Topic: {topic}"
+        if topic
+        else f"Topic: vary naturally for a {role} role"
     )
 
     history_text = ""
@@ -62,44 +92,49 @@ def get_feedback_and_next(resume, experience, difficulty, topic, role,
             for i, p in enumerate(pairs)
         )
 
-    prompt = f"""You are a professional technical interviewer evaluating a candidate's answer.
-The candidate is interviewing for the role of {role}.
+    prompt = f"""You are a professional technical interviewer.
+
+The candidate is applying for: {role}
 
 Candidate Resume:
 {resume[:2000]}
 
-Target Role:      {role}
 Experience Level: {experience}
-Difficulty:       {difficulty}
+Difficulty Level: {difficulty}
 {topic_line}
 
-Previous Q&A History:
-{history_text or "None (this is the first question)"}
+Previous Q&A:
+{history_text or "None"}
 
 Current Question:
 {current_question}
 
-Candidate's Answer:
+Candidate Answer:
 {candidate_answer}
 
-Your Tasks:
-1. Evaluate the answer honestly but supportively.
-2. Generate the NEXT interview question for a {role} candidate:
-   - If answer was weak → go deeper on the same concept
-   - If answer was strong → move to a new topic relevant to {role}
-   - Always respect the difficulty level
-   - If topic is fixed → stay within it
-   - If topic is free → vary topics naturally for a {role} interview
+{QUESTION_RULES}
 
-Respond ONLY with a valid JSON object (no markdown fences, no extra text):
+Evaluation Rules:
+- Be honest but supportive
+- Keep feedback concise
+- Focus on key improvements only
+
+Next Question Rules:
+- If answer is weak → ask a simpler follow-up on SAME concept
+- If answer is strong → move to a NEW topic
+- Keep next question SHORT and SINGLE-CONCEPT
+- Avoid system design unless difficulty is HARD
+
+Respond ONLY in valid JSON:
 {{
-  "correctness": "Was the answer correct? Explain briefly.",
-  "missing_points": "Key points the candidate missed.",
-  "improvements": "Specific suggestions to improve the answer.",
-  "sample_answer": "A concise ideal answer.",
-  "encouragement": "One encouraging sentence.",
-  "next_question": "The next interview question for a {role} role (just the question text)."
-}}"""
+  "correctness": "Short evaluation",
+  "missing_points": "Key missing ideas",
+  "improvements": "How to improve",
+  "sample_answer": "Concise ideal answer",
+  "encouragement": "Short motivation",
+  "next_question": "Short, clear next question"
+}}
+"""
 
     model = _get_model()
     response = model.generate_content(prompt)
@@ -109,10 +144,10 @@ Respond ONLY with a valid JSON object (no markdown fences, no extra text):
         return json.loads(raw)
     except json.JSONDecodeError:
         return {
-            "correctness":    "Could not parse AI response. Please try again.",
+            "correctness": "Could not evaluate properly.",
             "missing_points": "—",
-            "improvements":   "—",
-            "sample_answer":  "—",
-            "encouragement":  "Keep going, you're doing great!",
-            "next_question":  current_question,
+            "improvements": "Try again.",
+            "sample_answer": "—",
+            "encouragement": "Keep going, you're doing great!",
+            "next_question": current_question,
         }
